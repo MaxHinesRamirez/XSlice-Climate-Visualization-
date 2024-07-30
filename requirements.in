@@ -1,0 +1,14 @@
+numpy
+ipywidgets
+matplotlib
+requests
+pathlib
+xarray
+netCDF4
+h5netcdf
+scipy
+pydap
+cftime
+PseudoNetCDF
+dask
+basemap
