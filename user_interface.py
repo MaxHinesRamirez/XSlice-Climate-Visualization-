@@ -62,6 +62,8 @@ lon_w = widgets.SelectionRangeSlider(
     disabled=False,
     continuous_update=False,
 )
+lon_w.style.description_width = '90px'
+
 # Time Widgets
 year_w = widgets.SelectionRangeSlider(
     options=np.arange(1980, 2022),
@@ -95,6 +97,24 @@ hov_interval = widgets.Dropdown(
     description="Cycle:",
     disabled=False,
 )
+#MOVIE WIDGETS
+movie = widgets.ToggleButton(
+    value=False,
+    description="Movie",
+    disabled=False,
+    button_style="",
+    tooltip="Movie mode",
+    icon="play-circle",  # (FontAwesome names without the `fa-` prefix)
+)
+
+movie_order = widgets.Dropdown(
+    options=["Time First", "Depth First"],
+    value="Depth First",
+    description="Slider Sequence",
+    disabled=False,
+)
+
+movie_order.style.description_width = '100px'
 
 # Aesthetics Widgets
 # Color Widgets
@@ -206,6 +226,14 @@ def ui():
     .tabs .widget-tab .tab {
         font-size: 18px !important;  
     }
+    .widget-readout {
+    font-size: 18px !important;
+    width: 140px !important;
+    text-align: left !important;
+    }
+    .widget-label {
+        font-size: 18px !important; 
+    }
     </style>
     """
 
@@ -237,9 +265,12 @@ def ui():
     tab2_accord2 = widgets.VBox(
         [t2a2r1, t2a2r2, t2a2r3, t2a2r4, t2a2r5]
     )  # Combining into 1 accordion
+    # tab2_accord3 = widgets.HBox([movie,movie_order])
     # Combining accordions to make the tab
+    # tab2 = widgets.Accordion(children=[tab2_accord1, tab2_accord3,tab2_accord2], selected_index=2)
     tab2 = widgets.Accordion(children=[tab2_accord1, tab2_accord2], selected_index=1)
     # adding names
+    # accordion_titles = ["Hovmoller","Movie", "Cross Section"]
     accordion_titles = ["Hovmoller", "Cross Section"]
     [tab2.set_title(i, title) for i, title in enumerate(accordion_titles)]
     # Final Tab
