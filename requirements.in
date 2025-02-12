@@ -1,9 +1,11 @@
 numpy
 ipywidgets
 matplotlib
+cartopy
 requests
 pathlib
 xarray
+imageio_ffmpeg
 netCDF4
 h5netcdf
 scipy

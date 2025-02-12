@@ -1,7 +1,7 @@
 import os
 
 os.environ["PROJ_LIB"] = "C:\\Utilities\\Python\\Anaconda\\Library\\share"
-# fixr
+
 from user_interface import *
 from xslice_functions_Current import f
 
@@ -12,6 +12,7 @@ def output():
         {
             "hovmoller": hovmoller,
             "interval": hov_interval,
+            "movie": movie,
             "cross_section": cs_toggle,
             "variables": variable_butt,
             "yr": year_w,
@@ -27,6 +28,12 @@ def output():
             "text_size": text_size,
             "font": fonts,
             "align": align,
+            "diff": diff_toggle,
+            "time_avg": time_avg_toggle,
+            "animation":animation_dropdown,
+            "animation_title":animation_title_w,
+            "anomaly":anomaly_toggle,
+            "time_series":time_series_toggle
         },
     )
     return out
