@@ -60,6 +60,7 @@ h5py==3.8.0
 idna==3.4
     # via requests
 imageio_ffmpeg
+imageio-ffmpeg
 importlib-metadata==6.1.0
     # via
     #   dask
