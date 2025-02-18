@@ -2,7 +2,7 @@ import os
 
 os.environ["PROJ_LIB"] = "C:\\Utilities\\Python\\Anaconda\\Library\\share"
 
-from user_interface import *
+from user_interface_current import *
 from xslice_functions_Current import f
 
 
@@ -15,6 +15,8 @@ def output():
             "movie": movie,
             "cross_section": cs_toggle,
             "variables": variable_butt,
+            "mean": mean_butt,
+            "pottmp_units": units_dropdown,
             "yr": year_w,
             "month": month_w,
             "depth": levels,
@@ -32,7 +34,6 @@ def output():
             "time_avg": time_avg_toggle,
             "animation":animation_dropdown,
             "animation_title":animation_title_w,
-            "anomaly":anomaly_toggle,
             "time_series":time_series_toggle
         },
     )

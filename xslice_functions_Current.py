@@ -102,7 +102,7 @@ def seasonal_cols(Year, Month):
 
 
 # homvoller graph
-def hov(cs, interval, variables, year, month, depth, lat, lon, clrs, font_dic, align):
+def hov(cs, interval, variables,pottmp_units, year, month, depth, lat, lon, clrs, font_dic, align):
     plt.clf()
     file = nC.Dataset("godas_" + variables + ".nc")
     time = np.linspace(year[0], year[1], (year[1] - year[0]) * 12 + 1)
@@ -211,6 +211,7 @@ def play_movie(cs, variables, year, month,animation):
 
 def create_animation(
     variables,
+    pottmp_units,
     yr,
     month,
     lat,
@@ -229,7 +230,7 @@ def create_animation(
     latitudes_full = ds["lat"].values
     longitudes_full = ds["lon"].values
     depths_full = ds["level"].values
-    units = ds[variables].units if 'units' in file.variables[variables].ncattrs() else 'Unknown units'
+    units = ds[variables].units if 'units' in ds[variables].attrs else 'Unknown units'
 
     latitudes = latitudes_full[lat[0] : lat[-1] + 1]
     longitudes = longitudes_full[lon[0] : lon[-1] + 1]
@@ -242,6 +243,9 @@ def create_animation(
         level=depths_sel
     ).sel(time=slice(f"{yr[0]}-01-01", f"{yr[-1]}-12-31"))
 
+    if variables=='pottmp' and pottmp_units == "Celsius":
+        data_subset = data_subset - 273.15
+        units = "°C"
     sampled = data_subset.isel(time=slice(None, None, 5), level=slice(None, None, 5))
     vmin = float(sampled.min().values)
     vmax = float(sampled.max().values)
@@ -396,8 +400,12 @@ def create_animation(
     print(f"Saved animation to {out_file}")
 
 #Time Series plot
-def plot_timeseries(variables, yr, month, lat, lon, depth, cross_section):
+def plot_timeseries(variables,pottmp_units, yr, month, lat, lon, depth, cross_section):
     ds = xr.open_dataset(f"godas_{variables}.nc")
+    units = ds[variables].units if 'units' in ds[variables].attrs else 'Unknown units'
+    lats = ds["lat"].values
+    lons = ds["lon"].values
+    depths = ds["level"].values
     all_years = np.arange(yr[0], yr[1] + 1)
     data_points = []
 
@@ -409,10 +417,12 @@ def plot_timeseries(variables, yr, month, lat, lon, depth, cross_section):
             val = single_time_ds.isel(
                 lat=lat[0],
                 lon=lon[0],
-                level=depth[0]
-            ).values
-            title = (f"Time Series of {months[month-1]} {variables} at "
-                     f"latitude {lat[0]}$^\circ$, longitude {lon[0]}$^\circ$, depth {depth[0]}m")
+                level=slice(depth[0], depth[-1] + 1)
+            ).mean(dim="level").values
+            title = (
+                f"Time Series of {months[month - 1]} {variables} at "
+                f"latitude {round(lats[lat[0]],1)}$^\circ$, longitude {lons[lon[0]]}$^\circ$, "
+                f"averaged across depth {depths[depth[0]]} m to {depths[depth[-1]]} m")
 
         elif cross_section == "Longitudinal":
             val = single_time_ds.isel(
@@ -421,8 +431,8 @@ def plot_timeseries(variables, yr, month, lat, lon, depth, cross_section):
                 lon=slice(lon[0], lon[-1] + 1)
             ).mean(dim="lon").values
             title = (f"Time Series of {months[month-1]} {variables} at "
-                     f"latitude {lat[0]}$^\circ$, depth {depth[0]}m, "
-                     f"averaged across longitude {lon[0]}$^\circ$ to {lon[-1]}$^\circ$")
+                     f"latitude {str(round(lats[lat[0]],1))}$^\circ$, depth {depths[depth[0]]} m, "
+                     f"averaged across longitude {lons[lon[0]]}$^\circ$ to {lons[lon[-1]]}$^\circ$")
 
         elif cross_section == "Latitudinal":
             val = single_time_ds.isel(
@@ -431,16 +441,18 @@ def plot_timeseries(variables, yr, month, lat, lon, depth, cross_section):
                 lat=slice(lat[0], lat[-1] + 1)
             ).mean(dim="lat").values
             title = (f"Time Series of {months[month-1]} {variables} at "
-                     f"longitude {lon[0]}$^\circ$, depth {depth[0]}m, "
-                     f"averaged across latitude {lat[0]}$^\circ$ to {lat[-1]}$^\circ$")
+                     f"longitude {lons[lon[0]]}$^\circ$, depth {depths[depth[0]]} m, "
+                     f"averaged across latitude {str(round(lats[lat[0]],1))}$^\circ$ to {str(round(lats[lat[-1]],1))}$^\circ$")
 
         data_points.append(val)
-        
+    if variables=='pottmp' and pottmp_units == "Celsius":
+        data_points = data_points - 273.15
+        units = "°C"    
     plt.figure(figsize=(10, 5))
     plt.plot(all_years, data_points, marker="o", linestyle="-")
     plt.title(title)
     plt.xlabel("Year")
-    plt.ylabel(f"{variables}")
+    plt.ylabel(f"{variables} ({units})")
     plt.grid(True)
     plt.show()
 
@@ -452,6 +464,8 @@ def f(
         movie,
         cross_section,
         variables,
+        mean,
+        pottmp_units,
         yr,
         month,
         depth,
@@ -469,7 +483,6 @@ def f(
     time_avg,
     animation,
     animation_title,
-    anomaly,
     time_series
 ):
     font_dic = {
@@ -486,6 +499,7 @@ def f(
             cross_section,
             interval,
             variables,
+            pottmp_units,
             yr,
             month,
             depth,
@@ -511,6 +525,9 @@ def f(
             if variables == "salt":
                 units='psu'
                 data = data*1000
+            if variables=='pottmp' and pottmp_units == "Celsius":
+                data = data - 273.15
+                units = "°C"
         lats = ds["lat"].values
         lons = ds["lon"].values
         depths = ds["level"].values
@@ -532,7 +549,7 @@ def f(
                 )
             data = data_sel.mean(dim="time")
 
-        if anomaly:
+        if mean=="Mean Subtracted":
             ds_clim = xr.open_dataset(f"godas_{variables}_clim.nc")
             month_clim = ds_clim[variables].sel(month=month)
             data = data - month_clim
@@ -542,7 +559,7 @@ def f(
                 new_hatch.append(c)
 
         if time_series:
-            plot_timeseries(variables, yr, month, lat, lon, depth, cross_section)
+            plot_timeseries(variables, pottmp_units,yr, month, lat, lon, depth, cross_section)
     
         else:
             if cross_section == "Latitudinal":
@@ -565,7 +582,7 @@ def f(
                         + " "
                         + variables 
                         + " at Latitude "
-                        + str(lats[lat[0]])
+                        + str(round(lats[lat[0]],1))
                 )
                 if diff:
                     title = (
@@ -577,7 +594,7 @@ def f(
                         + " difference in "
                         + variables
                         + " at Latitude "
-                        + str(lats[lat[0]])
+                        + str(round(lats[lat[0]],1))
                     )
                 if time_avg:
                     title = (
@@ -589,9 +606,9 @@ def f(
                         + " average "
                         + variables
                         + " at Latitude "
-                        + str(lats[lat[0]])
+                        + str(round(lats[lat[0]],1))
                     )
-                if anomaly:
+                if mean=="Mean Subtracted":
                     title = (
                         months[month - 1]
                         + " "
@@ -600,7 +617,7 @@ def f(
                         + variables 
                         + " anomaly"
                         + " at Latitude "
-                        + str(lats[lat[0]])
+                        + str(round(lats[lat[0]],1))
                 )
                         
                 plt.title(title + r"$^\circ$", font=font_dic, loc=align)
@@ -658,7 +675,7 @@ def f(
                         + " at Longitude "
                         + str(lons[lon[0]])
                     )
-                if anomaly:
+                if mean=="Mean Subtracted":
                     title = (
                         months[month - 1]
                         + " "
@@ -690,7 +707,7 @@ def f(
                 else:
                     plt.pcolormesh(xx, yy, zz, shading="auto", cmap=clrs,transform=ccrs.PlateCarree())
                 cax = ig.add_axes([ax.get_position().x1+0.01,ax.get_position().y0,0.02,ax.get_position().height])
-                cb = plt.colorbar(location="right",cax=cax,shrink=0.8)
+                cb = plt.colorbar(location="right",cax=cax,shrink=1)
                 cb.ax.tick_params(labelsize=20)
                 cb.formatter.set_powerlimits((-7, 3))
                 plt.text(0.5, 1.01, f'{units}', font=font_dic, ha='center', va='bottom', transform=cb.ax.transAxes)
@@ -749,7 +766,7 @@ def f(
                         + str(int(depths[depth[0]]))
                         + " m"
                     )
-                if anomaly:
+                if mean=="Mean Subtracted":
                     title = (
                         months[month - 1]
                         + " "

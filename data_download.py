@@ -7,7 +7,7 @@ import xarray as xr
 
 ALL_VARIABLES = ["salt", "pottmp", "ucur", "vcur"]
 def download_data():
-    folder = Path("GODAS data")
+    folder = Path("GODAS_data")
     folder.mkdir(exist_ok=True) 
     combined_files = [folder / f"godas_{var}.nc" for var in ALL_VARIABLES]
     if all(cf.exists() for cf in combined_files):
@@ -37,9 +37,10 @@ def download_data():
     images_folder = Path("images")
     images_folder.mkdir(exist_ok=True)
 
-    create_climatologies(Path.cwd())
+    # create_climatologies(Path.cwd())
 
     print("Download and combination complete!")
+    print(f"Data files are located in: {folder.resolve()}")
 
 def create_climatologies(folder: Path):
     for var in ALL_VARIABLES:
@@ -64,3 +65,4 @@ def create_climatologies(folder: Path):
 
         ds_clim.to_netcdf(clim_file)
         print(f"Climatology for {var} saved as {clim_file.name}")
+    print(f"Data files are located in: {folder.resolve()}")

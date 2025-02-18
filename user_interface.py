@@ -31,6 +31,12 @@ mean_butt = widgets.Select(
     description="Alter: ",
     disabled=False,
 )
+units_dropdown = widgets.Dropdown(
+    options=["Kelvin", "Celsius"],
+    value="Kelvin",
+    description="Units:",
+    disabled=False,
+)
 
 diff_toggle = widgets.ToggleButton(
     value=False,
@@ -50,15 +56,6 @@ time_avg_toggle = widgets.ToggleButton(
     icon="clock" 
 )
 
-anomaly_toggle = widgets.ToggleButton(
-    value=False,
-    description="Plot Anomalies",
-    disabled=False,
-    button_style="",
-    tooltip="Toggle to plot anomalies instead of raw data",
-    icon="exchange"
-)
-
 time_series_toggle = widgets.ToggleButton(
     value=False,
     description="Time Series",
@@ -67,6 +64,17 @@ time_series_toggle = widgets.ToggleButton(
     tooltip="Plot a time series at or averaged across the selected region",
     icon="line-chart" 
 )
+
+def only_one_toggle_is_active(change):
+    if change["new"] == True:
+        sender = change["owner"]
+        for t in [diff_toggle, time_avg_toggle,  time_series_toggle]:
+            if t is not sender:
+                t.value = False
+
+diff_toggle.observe(only_one_toggle_is_active, names="value")
+time_avg_toggle.observe(only_one_toggle_is_active, names="value")
+time_series_toggle.observe(only_one_toggle_is_active, names="value")
 
 
 # Tab 2
@@ -101,11 +109,11 @@ levels = widgets.SelectionRangeSlider(
     description="Depth",
     continuous_update=False,
     readout=False,
-    layout=widgets.Layout(width='250px'),
+    layout=widgets.Layout(width='255px'),
 )
 # Text inputs for manually adjusting depth range
-min_depth_input = widgets.FloatText(value=round(depth_levels[0], 2), step=0.01,layout=widgets.Layout(width='55px'))
-max_depth_input = widgets.FloatText(value=round(depth_levels[-1], 2), step=0.01,layout=widgets.Layout(width='55px'))
+min_depth_input = widgets.FloatText(value=round(depth_levels[0], 2), step=0.01,layout=widgets.Layout(width='60px'))
+max_depth_input = widgets.FloatText(value=round(depth_levels[-1], 2), step=0.01,layout=widgets.Layout(width='60px'))
 
 # Function to snap input to the nearest valid depth
 def snap_to_closest_depth(value):
@@ -153,12 +161,12 @@ lat_w = widgets.SelectionRangeSlider(
     description="Latitude",
     readout=False,
     continuous_update=False,
-    layout=widgets.Layout(width='250px'),
+    layout=widgets.Layout(width='255px'),
 )
 
 # Text inputs for manually adjusting latitude range, rounded to 2 decimal places
-min_lat_input = widgets.FloatText(value=round(latitude_values[0], 2),step=0.1,layout=widgets.Layout(width='55px'))
-max_lat_input = widgets.FloatText(value=round(latitude_values[-1], 2), step=0.1,layout=widgets.Layout(width='55px'))
+min_lat_input = widgets.FloatText(value=round(latitude_values[0], 2),step=0.1,layout=widgets.Layout(width='60px'))
+max_lat_input = widgets.FloatText(value=round(latitude_values[-1], 2), step=0.1,layout=widgets.Layout(width='60px'))
 
 # Function to snap input to the nearest valid latitude
 def snap_to_closest_latitude(value):
@@ -197,13 +205,13 @@ lon_w = widgets.SelectionRangeSlider(
     disabled=False,
     continuous_update=False,
     readout=False,
-    layout=widgets.Layout(width='250px'),
+    layout=widgets.Layout(width='255px'),
 )
 
 
 lon_w.style.description_width = '90px'
-min_lon_input = widgets.BoundedIntText(value=0,min=0,max=359,step=1,layout=widgets.Layout(width='50px'),)
-max_lon_input = widgets.BoundedIntText(value=359,min=0,max=359,step=1,layout=widgets.Layout(width='50px'),)
+min_lon_input = widgets.BoundedIntText(value=0,min=0,max=359,step=1,layout=widgets.Layout(width='60px'),)
+max_lon_input = widgets.BoundedIntText(value=359,min=0,max=359,step=1,layout=widgets.Layout(width='60px'),)
 def update_lon_inputs(change):
     min_lon_input.value, max_lon_input.value = change['new']
 
@@ -253,14 +261,14 @@ month_w = widgets.IntSlider(
     layout=widgets.Layout(width='250px'),
 
 )
-month_input = widgets.BoundedIntText(value=1,min=1,max=12,step=1,layout=widgets.Layout(width='50px'),)
-def update_month_inputs(change):
+month_input = widgets.BoundedIntText(value=1,min=1,max=12,step=1,layout=widgets.Layout(width='40px'),)
+def update_month_input(change):
     month_input.value = change['new']
 
 def update_month_slider(change):
-    month_w.value = (change['new'], month_w.value[1])
+    month_w.value = change["new"]
 
-month_w.observe(update_month_inputs, names='value')
+month_w.observe(update_month_input, names='value')
 month_input.observe(update_month_slider, names='value')
 
 # HOVMOLLER WIDGETS
@@ -351,6 +359,7 @@ def on_create_video_clicked(b):
         create_animation(
             variables=variable_butt.value,
             yr=year_w.value,
+            pottmp_units=units_dropdown.value,
             month=month_w.value,
             lat=lat_w.value,
             lon=lon_w.value,
@@ -489,7 +498,8 @@ def ui():
     display(HTML(style))
     tabs = widgets.Tab()
     tab1 = widgets.HBox([ logo,
-                        variable_butt,mean_butt
+                        variable_butt,mean_butt,
+                         units_dropdown
                         ])
 
     # Second tab is the main interface for operations
@@ -509,13 +519,25 @@ def ui():
         description="",
     )
     t2a2r5 = widgets.HBox([levels,min_depth_input,max_depth_input, lat_w,min_lat_input,max_lat_input, lon_w,min_lon_input,max_lon_input])  # Tab 2, accordion 2, row 5
-    t2a2r6 = widgets.HBox([diff_toggle,time_avg_toggle, anomaly_toggle, time_series_toggle])
+    t2a2r6 = widgets.HBox([diff_toggle,time_avg_toggle, time_series_toggle])
     tab2_accord2 = widgets.VBox(
         [t2a2r1, t2a2r2, t2a2r3, t2a2r4, t2a2r5,t2a2r6]
     )  # Combining into 1 accordion
     tab2_accord3_row1 = widgets.HBox([animation_title_w,create_animation_button])
     tab2_accord3_row2 = widgets.HBox([movie,animation_dropdown,refresh_button])
-    tab2_accord3 = widgets.VBox([tab2_accord3_row1,tab2_accord3_row2,animation_printbox])
+    tab2_accord3_header1 = widgets.HTML(
+    value="<h3>Create Animations:</h3>")
+    tab2_accord3_header2 = widgets.HTML(
+    value="<h3>Display Animations:</h3>")
+    tab2_accord3_warning = widgets.HTML(
+    value="<p style='color:red;'><b>Warning:</b> Set dimension inputs before animating. Creating animations can significantly slow down the tool!</p>")
+    tab2_accord3 = widgets.VBox([
+    tab2_accord3_header1, 
+    tab2_accord3_row1, 
+    tab2_accord3_header2, 
+    tab2_accord3_row2, 
+    tab2_accord3_warning,
+    animation_printbox])
     # Combining accordions to make the tab
     tab2 = widgets.Accordion(children=[tab2_accord1, tab2_accord3,tab2_accord2], selected_index=2)
     # adding names
