@@ -330,7 +330,7 @@ refresh_button.on_click(refresh_button_clicked)
 
 movie = widgets.ToggleButton(
     value=False,
-    description="Animation",
+    description="Play Animation",
     disabled=False,
     button_style="",
     tooltip="Play selected animation",

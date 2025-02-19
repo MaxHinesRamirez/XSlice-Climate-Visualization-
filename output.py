@@ -2,7 +2,7 @@ import os
 
 os.environ["PROJ_LIB"] = "C:\\Utilities\\Python\\Anaconda\\Library\\share"
 
-from user_interface_current import *
+from user_interface import *
 from xslice_functions_Current import f
 
 
