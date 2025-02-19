@@ -165,6 +165,7 @@ def hov(cs, interval, variables,pottmp_units, year, month, depth, lat, lon, clrs
     plt.ylabel("Year", size=20)
     title = hov_title(cs, variables, interval, month, depth, lat, lon)
     plt.title(title, font=font_dic, loc=align)
+    plt.show()
 
 
 def hov_title(cs, variables, interval, month, depth, lat, lon):
